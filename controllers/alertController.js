@@ -1,7 +1,6 @@
 const db = require('../models');
 const asyncHandler = require('../middleware/asyncHandler');
 
-// Get all alerts
 exports.getAllAlerts = asyncHandler(async (req, res) => {
   const { status, category, kit_id } = req.query;
   const where = {};
@@ -17,7 +16,6 @@ exports.getAllAlerts = asyncHandler(async (req, res) => {
   res.json({ success: true, data: alerts });
 });
 
-// Get alert by ID
 exports.getAlertById = asyncHandler(async (req, res) => {
   const alert = await db.Alert.findByPk(req.params.id, {
     include: [{ model: db.Kit, as: 'kit' }]
@@ -28,13 +26,11 @@ exports.getAlertById = asyncHandler(async (req, res) => {
   res.json({ success: true, data: alert });
 });
 
-// Create new alert
 exports.createAlert = asyncHandler(async (req, res) => {
   const alert = await db.Alert.create(req.body);
   res.status(201).json({ success: true, data: alert });
 });
 
-// Update alert
 exports.updateAlert = asyncHandler(async (req, res) => {
   const alert = await db.Alert.findByPk(req.params.id);
   if (!alert) {
@@ -44,7 +40,6 @@ exports.updateAlert = asyncHandler(async (req, res) => {
   res.json({ success: true, data: alert });
 });
 
-// Resolve alert
 exports.resolveAlert = asyncHandler(async (req, res) => {
   const alert = await db.Alert.findByPk(req.params.id);
   if (!alert) {
@@ -54,7 +49,6 @@ exports.resolveAlert = asyncHandler(async (req, res) => {
   res.json({ success: true, data: alert });
 });
 
-// Delete alert
 exports.deleteAlert = asyncHandler(async (req, res) => {
   const alert = await db.Alert.findByPk(req.params.id);
   if (!alert) {

@@ -1,7 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 
-// Check if .env file exists
 const envPath = path.join(__dirname, '.env');
 if (!fs.existsSync(envPath)) {
   console.error('❌ .env file not found!');
@@ -28,16 +27,13 @@ const errorHandler = require('./middleware/errorHandler');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
 app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Routes
 app.use('/api', routes);
 
-// Root endpoint
 app.get('/', (req, res) => {
   res.json({
     success: true,
@@ -62,7 +58,6 @@ app.get('/', (req, res) => {
   });
 });
 
-// 404 handler
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -70,24 +65,18 @@ app.use((req, res) => {
   });
 });
 
-// Error handler
 app.use(errorHandler);
 
-// Database connection and server start
 const startServer = async () => {
   try {
-    // Test database connection
     await db.sequelize.authenticate();
     console.log('✅ Database connection established successfully.');
 
-    // Sync database (use { force: true } only in development to drop tables)
-    // In production, use migrations instead
     if (process.env.NODE_ENV === 'development' && process.env.SYNC_DB === 'true') {
       await db.sequelize.sync({ alter: true });
       console.log('✅ Database synchronized.');
     }
 
-    // Start server
     app.listen(PORT, () => {
       console.log(`🚀 Server is running on port ${PORT}`);
       console.log(`📡 API available at http://localhost:${PORT}/api`);
@@ -121,7 +110,6 @@ const startServer = async () => {
 
 startServer();
 
-// Graceful shutdown
 process.on('SIGTERM', async () => {
   console.log('SIGTERM signal received: closing HTTP server');
   await db.sequelize.close();

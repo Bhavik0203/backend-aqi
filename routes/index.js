@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 
-// Import all route modules
 const userProfileRoutes = require('./userProfileRoutes');
 const sensorBatchRoutes = require('./sensorBatchRoutes');
 const kitBatchRoutes = require('./kitBatchRoutes');
@@ -16,7 +15,6 @@ const deviceHealthRoutes = require('./deviceHealthRoutes');
 const technicianRoutes = require('./technicianRoutes');
 const reportRoutes = require('./reportRoutes');
 
-// Mount routes
 router.use('/user-profiles', userProfileRoutes);
 router.use('/sensor-batches', sensorBatchRoutes);
 router.use('/kit-batches', kitBatchRoutes);
@@ -31,7 +29,6 @@ router.use('/device-health', deviceHealthRoutes);
 router.use('/technicians', technicianRoutes);
 router.use('/reports', reportRoutes);
 
-// Health check endpoint
 router.get('/health', (req, res) => {
   res.json({ success: true, message: 'API is running', timestamp: new Date().toISOString() });
 });

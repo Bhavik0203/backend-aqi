@@ -1,7 +1,6 @@
 const db = require('../models');
 const asyncHandler = require('../middleware/asyncHandler');
 
-// Get all orders
 exports.getAllOrders = asyncHandler(async (req, res) => {
   const { status, user_id } = req.query;
   const where = {};
@@ -19,7 +18,6 @@ exports.getAllOrders = asyncHandler(async (req, res) => {
   res.json({ success: true, data: orders });
 });
 
-// Get order by ID
 exports.getOrderById = asyncHandler(async (req, res) => {
   const order = await db.Order.findByPk(req.params.id, {
     include: [
@@ -33,11 +31,9 @@ exports.getOrderById = asyncHandler(async (req, res) => {
   res.json({ success: true, data: order });
 });
 
-// Create new order
 exports.createOrder = asyncHandler(async (req, res) => {
   const order = await db.Order.create(req.body);
-  
-  // Create initial status log
+
   await db.OrderStatusLog.create({
     order_id: order.id,
     order_status: order.current_order_status,
@@ -47,7 +43,6 @@ exports.createOrder = asyncHandler(async (req, res) => {
   res.status(201).json({ success: true, data: order });
 });
 
-// Update order status
 exports.updateOrderStatus = asyncHandler(async (req, res) => {
   const { order_status, status_remarks } = req.body;
   const order = await db.Order.findByPk(req.params.id);
@@ -56,12 +51,11 @@ exports.updateOrderStatus = asyncHandler(async (req, res) => {
   }
 
   await order.update({ current_order_status: order_status });
-  
+
   if (order_status === 'delivered') {
     await order.update({ delivered_at: new Date() });
   }
 
-  // Create status log
   await db.OrderStatusLog.create({
     order_id: order.id,
     order_status: order_status,
@@ -71,7 +65,6 @@ exports.updateOrderStatus = asyncHandler(async (req, res) => {
   res.json({ success: true, data: order });
 });
 
-// Delete order
 exports.deleteOrder = asyncHandler(async (req, res) => {
   const order = await db.Order.findByPk(req.params.id);
   if (!order) {

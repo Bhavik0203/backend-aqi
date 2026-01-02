@@ -1,7 +1,6 @@
 const db = require('../models');
 const asyncHandler = require('../middleware/asyncHandler');
 
-// Get all reports
 exports.getAllReports = asyncHandler(async (req, res) => {
   const { user_id, report_type } = req.query;
   const where = {};
@@ -15,7 +14,6 @@ exports.getAllReports = asyncHandler(async (req, res) => {
   res.json({ success: true, data: reports });
 });
 
-// Get report by ID
 exports.getReportById = asyncHandler(async (req, res) => {
   const report = await db.Report.findByPk(req.params.id);
   if (!report) {
@@ -24,13 +22,11 @@ exports.getReportById = asyncHandler(async (req, res) => {
   res.json({ success: true, data: report });
 });
 
-// Create new report
 exports.createReport = asyncHandler(async (req, res) => {
   const report = await db.Report.create(req.body);
   res.status(201).json({ success: true, data: report });
 });
 
-// Delete report
 exports.deleteReport = asyncHandler(async (req, res) => {
   const report = await db.Report.findByPk(req.params.id);
   if (!report) {

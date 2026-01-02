@@ -1,7 +1,6 @@
 const db = require('../models');
 const asyncHandler = require('../middleware/asyncHandler');
 
-// Get all device health logs
 exports.getAllHealthLogs = asyncHandler(async (req, res) => {
   const { kit_id, status, limit = 100 } = req.query;
   const where = {};
@@ -17,7 +16,6 @@ exports.getAllHealthLogs = asyncHandler(async (req, res) => {
   res.json({ success: true, data: logs });
 });
 
-// Get latest health status for a kit
 exports.getLatestHealthStatus = asyncHandler(async (req, res) => {
   const log = await db.DeviceHealthLog.findOne({
     where: { kit_id: req.params.kitId },
@@ -30,13 +28,11 @@ exports.getLatestHealthStatus = asyncHandler(async (req, res) => {
   res.json({ success: true, data: log });
 });
 
-// Create new health log
 exports.createHealthLog = asyncHandler(async (req, res) => {
   const log = await db.DeviceHealthLog.create(req.body);
   res.status(201).json({ success: true, data: log });
 });
 
-// Delete health log
 exports.deleteHealthLog = asyncHandler(async (req, res) => {
   const log = await db.DeviceHealthLog.findByPk(req.params.id);
   if (!log) {

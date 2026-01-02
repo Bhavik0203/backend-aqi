@@ -1,7 +1,6 @@
 const db = require('../models');
 const asyncHandler = require('../middleware/asyncHandler');
 
-// Get all technician availability records
 exports.getAllTechnicians = asyncHandler(async (req, res) => {
   const { status } = req.query;
   const where = {};
@@ -14,7 +13,6 @@ exports.getAllTechnicians = asyncHandler(async (req, res) => {
   res.json({ success: true, data: technicians });
 });
 
-// Get technician by ID
 exports.getTechnicianById = asyncHandler(async (req, res) => {
   const technician = await db.TechnicianAvailability.findOne({
     where: { technician_id: req.params.id }
@@ -25,7 +23,6 @@ exports.getTechnicianById = asyncHandler(async (req, res) => {
   res.json({ success: true, data: technician });
 });
 
-// Create or update technician availability
 exports.updateAvailability = asyncHandler(async (req, res) => {
   const { availability_status } = req.body;
   const [technician, created] = await db.TechnicianAvailability.findOrCreate({
@@ -43,7 +40,6 @@ exports.updateAvailability = asyncHandler(async (req, res) => {
   res.json({ success: true, data: technician });
 });
 
-// Delete technician record
 exports.deleteTechnician = asyncHandler(async (req, res) => {
   const technician = await db.TechnicianAvailability.findOne({
     where: { technician_id: req.params.id }

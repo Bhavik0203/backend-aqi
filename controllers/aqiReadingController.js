@@ -2,7 +2,6 @@ const db = require('../models');
 const { Op } = require('sequelize');
 const asyncHandler = require('../middleware/asyncHandler');
 
-// Get all AQI readings
 exports.getAllReadings = asyncHandler(async (req, res) => {
   const { kit_id, start_date, end_date, limit = 100 } = req.query;
   const where = {};
@@ -22,7 +21,6 @@ exports.getAllReadings = asyncHandler(async (req, res) => {
   res.json({ success: true, data: readings });
 });
 
-// Get reading by ID
 exports.getReadingById = asyncHandler(async (req, res) => {
   const reading = await db.AQIReading.findByPk(req.params.id, {
     include: [{ model: db.Kit, as: 'kit' }]
@@ -33,20 +31,17 @@ exports.getReadingById = asyncHandler(async (req, res) => {
   res.json({ success: true, data: reading });
 });
 
-// Create new reading
 exports.createReading = asyncHandler(async (req, res) => {
   const reading = await db.AQIReading.create(req.body);
   res.status(201).json({ success: true, data: reading });
 });
 
-// Bulk create readings
 exports.bulkCreateReadings = asyncHandler(async (req, res) => {
   const { readings } = req.body;
   const createdReadings = await db.AQIReading.bulkCreate(readings);
   res.status(201).json({ success: true, data: createdReadings, count: createdReadings.length });
 });
 
-// Get latest reading for a kit
 exports.getLatestReading = asyncHandler(async (req, res) => {
   const reading = await db.AQIReading.findOne({
     where: { kit_id: req.params.kitId },
@@ -59,7 +54,6 @@ exports.getLatestReading = asyncHandler(async (req, res) => {
   res.json({ success: true, data: reading });
 });
 
-// Delete reading
 exports.deleteReading = asyncHandler(async (req, res) => {
   const reading = await db.AQIReading.findByPk(req.params.id);
   if (!reading) {

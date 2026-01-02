@@ -1,7 +1,6 @@
 const db = require('../models');
 const asyncHandler = require('../middleware/asyncHandler');
 
-// Get all kits
 exports.getAllKits = asyncHandler(async (req, res) => {
   const { status, batch_id } = req.query;
   const where = {};
@@ -19,7 +18,6 @@ exports.getAllKits = asyncHandler(async (req, res) => {
   res.json({ success: true, data: kits });
 });
 
-// Get kit by ID
 exports.getKitById = asyncHandler(async (req, res) => {
   const kit = await db.Kit.findByPk(req.params.id, {
     include: [
@@ -35,13 +33,11 @@ exports.getKitById = asyncHandler(async (req, res) => {
   res.json({ success: true, data: kit });
 });
 
-// Create new kit
 exports.createKit = asyncHandler(async (req, res) => {
   const kit = await db.Kit.create(req.body);
   res.status(201).json({ success: true, data: kit });
 });
 
-// Update kit
 exports.updateKit = asyncHandler(async (req, res) => {
   const kit = await db.Kit.findByPk(req.params.id);
   if (!kit) {
@@ -51,7 +47,6 @@ exports.updateKit = asyncHandler(async (req, res) => {
   res.json({ success: true, data: kit });
 });
 
-// Delete kit
 exports.deleteKit = asyncHandler(async (req, res) => {
   const kit = await db.Kit.findByPk(req.params.id);
   if (!kit) {

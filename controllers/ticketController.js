@@ -1,7 +1,6 @@
 const db = require('../models');
 const asyncHandler = require('../middleware/asyncHandler');
 
-// Get all tickets
 exports.getAllTickets = asyncHandler(async (req, res) => {
   const { status, type, kit_id, technician_id } = req.query;
   const where = {};
@@ -22,7 +21,6 @@ exports.getAllTickets = asyncHandler(async (req, res) => {
   res.json({ success: true, data: tickets });
 });
 
-// Get ticket by ID
 exports.getTicketById = asyncHandler(async (req, res) => {
   const ticket = await db.Ticket.findByPk(req.params.id, {
     include: [
@@ -37,11 +35,9 @@ exports.getTicketById = asyncHandler(async (req, res) => {
   res.json({ success: true, data: ticket });
 });
 
-// Create new ticket
 exports.createTicket = asyncHandler(async (req, res) => {
   const ticket = await db.Ticket.create(req.body);
-  
-  // Create initial log
+
   await db.TicketLog.create({
     ticket_id: ticket.id,
     action_taken: 'Ticket created',
@@ -51,7 +47,6 @@ exports.createTicket = asyncHandler(async (req, res) => {
   res.status(201).json({ success: true, data: ticket });
 });
 
-// Update ticket
 exports.updateTicket = asyncHandler(async (req, res) => {
   const ticket = await db.Ticket.findByPk(req.params.id);
   if (!ticket) {
@@ -61,7 +56,6 @@ exports.updateTicket = asyncHandler(async (req, res) => {
   res.json({ success: true, data: ticket });
 });
 
-// Add log to ticket
 exports.addTicketLog = asyncHandler(async (req, res) => {
   const { action_taken, remarks } = req.body;
   const ticket = await db.Ticket.findByPk(req.params.id);
@@ -78,7 +72,6 @@ exports.addTicketLog = asyncHandler(async (req, res) => {
   res.status(201).json({ success: true, data: log });
 });
 
-// Add image to ticket
 exports.addTicketImage = asyncHandler(async (req, res) => {
   const { image_url } = req.body;
   const ticket = await db.Ticket.findByPk(req.params.id);
@@ -94,7 +87,6 @@ exports.addTicketImage = asyncHandler(async (req, res) => {
   res.status(201).json({ success: true, data: image });
 });
 
-// Delete ticket
 exports.deleteTicket = asyncHandler(async (req, res) => {
   const ticket = await db.Ticket.findByPk(req.params.id);
   if (!ticket) {

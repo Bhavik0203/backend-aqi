@@ -72,7 +72,9 @@ const startServer = async () => {
     await db.sequelize.authenticate();
     console.log('✅ Database connection established successfully.');
 
-    if (process.env.NODE_ENV === 'development' && process.env.SYNC_DB === 'true') {
+    // Sync database in development (defaults to true unless SYNC_DB=false)
+    const isDev = (process.env.NODE_ENV || 'development') === 'development';
+    if (isDev && process.env.SYNC_DB !== 'false') {
       await db.sequelize.sync({ alter: true });
       console.log('✅ Database synchronized.');
     }
@@ -83,7 +85,7 @@ const startServer = async () => {
     });
   } catch (error) {
     console.error('\n❌ Unable to start server!\n');
-    
+
     if (error.name === 'SequelizeConnectionError') {
       console.error('📊 Database Connection Error:');
       console.error('   The server could not connect to PostgreSQL.\n');
@@ -103,7 +105,7 @@ const startServer = async () => {
     } else {
       console.error('Error details:', error.message);
     }
-    
+
     process.exit(1);
   }
 };

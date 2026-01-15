@@ -5,12 +5,9 @@ const syncDatabase = async () => {
         console.log('Attempting to sync database...');
         console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 
-        // Check connection first
         await db.sequelize.authenticate();
         console.log('✅ Database connection successful.');
 
-        // Sync all models
-        // alter: true will match the database state to the models
         await db.sequelize.sync({ alter: true });
         console.log('✅ Database tables created/synchronized successfully!');
 

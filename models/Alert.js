@@ -7,14 +7,14 @@ module.exports = (sequelize, DataTypes) => {
     },
     kit_id: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
       references: {
         model: 'kits',
         key: 'id'
       }
     },
     alert_category: {
-      type: DataTypes.ENUM('repair', 'maintenance', 'sensor_issue'),
+      type: DataTypes.ENUM('repair', 'maintenance', 'sensor_issue', 'order', 'ticket', 'user', 'inventory', 'deployment', 'sla'),
       allowNull: false
     },
     alert_description: {

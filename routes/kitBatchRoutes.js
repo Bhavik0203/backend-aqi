@@ -7,6 +7,7 @@ router.get('/:id', kitBatchController.getBatchById);
 router.post('/', kitBatchController.createBatch);
 router.put('/:id', kitBatchController.updateBatch);
 router.delete('/:id', kitBatchController.deleteBatch);
+router.post('/:id/items', kitBatchController.addKitsToBatch);
 
 module.exports = router;
 

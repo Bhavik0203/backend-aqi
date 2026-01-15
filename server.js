@@ -1,6 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 
+
+// when any one  Assign Technician , at same time it must 
+
 const envPath = path.join(__dirname, '.env');
 if (!fs.existsSync(envPath)) {
   console.error('❌ .env file not found!');
@@ -23,14 +26,16 @@ const morgan = require('morgan');
 const db = require('./models');
 const routes = require('./routes');
 const errorHandler = require('./middleware/errorHandler');
+require('./config/firebase'); 
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = 5000;
 
 app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/api', routes);
 
@@ -53,7 +58,9 @@ app.get('/', (req, res) => {
       maintenanceSchedules: '/api/maintenance-schedules',
       deviceHealth: '/api/device-health',
       technicians: '/api/technicians',
-      reports: '/api/reports'
+      reports: '/api/reports',
+      slaTracking: '/api/sla/tracking',
+      slaPerformance: '/api/sla/performance'
     }
   });
 });
@@ -72,16 +79,33 @@ const startServer = async () => {
     await db.sequelize.authenticate();
     console.log('✅ Database connection established successfully.');
 
-    // Sync database in development (defaults to true unless SYNC_DB=false)
     const isDev = (process.env.NODE_ENV || 'development') === 'development';
     if (isDev && process.env.SYNC_DB !== 'false') {
       await db.sequelize.sync({ alter: true });
       console.log('✅ Database synchronized.');
     }
 
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       console.log(`🚀 Server is running on port ${PORT}`);
       console.log(`📡 API available at http://localhost:${PORT}/api`);
+    });
+
+    server.on('error', (error) => {
+      if (error.code === 'EADDRINUSE') {
+        console.error('\n❌ Port already in use!\n');
+        console.error(`   Port ${PORT} is already being used by another process.\n`);
+        console.error('🔍 To fix this, you can:');
+        console.error('   1. Stop the other process using port ' + PORT);
+        console.error('   2. Use a different port by setting PORT environment variable');
+        console.error('   3. On Windows, find and kill the process:');
+        console.error('      netstat -ano | findstr :' + PORT);
+        console.error('      taskkill /PID <PID> /F');
+        console.error('   4. On Linux/Mac, find and kill the process:');
+        console.error('      lsof -ti:' + PORT + ' | xargs kill -9\n');
+        process.exit(1);
+      } else {
+        throw error;
+      }
     });
   } catch (error) {
     console.error('\n❌ Unable to start server!\n');

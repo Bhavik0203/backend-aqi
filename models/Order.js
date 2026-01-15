@@ -23,7 +23,7 @@ module.exports = (sequelize, DataTypes) => {
       }
     },
     current_order_status: {
-      type: DataTypes.ENUM('order_confirmed', 'shipped', 'out_for_delivery', 'delivered'),
+      type: DataTypes.ENUM('received', 'order_confirmed', 'shipped', 'out_for_delivery', 'delivered'),
       allowNull: false,
       defaultValue: 'order_confirmed'
     },
@@ -34,6 +34,50 @@ module.exports = (sequelize, DataTypes) => {
     },
     delivered_at: {
       type: DataTypes.DATE,
+      allowNull: true
+    },
+    customer_name: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    company: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    office_incharge: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    contact_number: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    location: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    city: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    state: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    pincode: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    country: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    total_amount: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true
+    },
+    email: {
+      type: DataTypes.STRING,
       allowNull: true
     }
   }, {

@@ -21,6 +21,14 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       allowNull: true
     },
+    ticket_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'tickets',
+        key: 'id'
+      }
+    },
     deployment_location: {
       type: DataTypes.STRING,
       allowNull: true
@@ -30,7 +38,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: true
     },
     deployment_status: {
-      type: DataTypes.ENUM('active', 'inactive', 'maintenance'),
+      type: DataTypes.ENUM('active', 'inactive', 'maintenance', 'pending', 'failure'),
       allowNull: false,
       defaultValue: 'active'
     }

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script>
+    // Change the host/port if your backend server is not running at localhost:5000
+    const socket = io("http://localhost:5000"); 
+    socket.on("connect", () => {
+      console.log("Connected to Socket.IO server");
+      document.body.insertAdjacentHTML('beforeend', '<div>Connected to Socket.IO</div>');
+    });
+    socket.on("alert:new", data => {
+      console.log("New alert:", data);
+      document.body.insertAdjacentHTML('beforeend', `<div style='color:green;'>New alert: <pre>${JSON.stringify(data, null, 2)}</pre></div>`);
+    });
+    socket.on("alert:updated", data => {
+      console.log("Alert updated:", data);
+      document.body.insertAdjacentHTML('beforeend', `<div style='color:blue;'>Alert updated: <pre>${JSON.stringify(data, null, 2)}</pre></div>`);
+    });
+    socket.on("alert:resolved", data => {
+      console.log("Alert resolved:", data);
+      document.body.insertAdjacentHTML('beforeend', `<div style='color:orange;'>Alert resolved: <pre>${JSON.stringify(data, null, 2)}</pre></div>`);
+    });
+  </script>
+  <h2>Socket.IO Real-Time Alert Test</h2>
+  <p>Open your browser's developer console for live event logs.</p>
+</body>
+</html>
+

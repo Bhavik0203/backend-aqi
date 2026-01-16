@@ -69,8 +69,13 @@ TicketLog.belongsTo(Ticket, { foreignKey: 'ticket_id', as: 'ticket' });
 Ticket.belongsTo(UserProfile, { foreignKey: 'created_by_user_id', as: 'creator' });
 Ticket.belongsTo(UserProfile, { foreignKey: 'assigned_technician_id', as: 'technician' });
 
+
 Ticket.hasMany(TicketImage, { foreignKey: 'ticket_id', as: 'images' });
 TicketImage.belongsTo(Ticket, { foreignKey: 'ticket_id', as: 'ticket' });
+
+Ticket.belongsTo(Order, { foreignKey: 'order_id', as: 'order' });
+Order.hasMany(Ticket, { foreignKey: 'order_id', as: 'tickets' });
+
 
 Kit.hasMany(Alert, { foreignKey: 'kit_id', as: 'alerts' });
 Alert.belongsTo(Kit, { foreignKey: 'kit_id', as: 'kit' });

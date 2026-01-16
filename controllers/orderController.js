@@ -44,6 +44,7 @@ exports.getAllOrders = asyncHandler(async (req, res) => {
     where,
     include: [
       { model: db.Kit, as: 'kit' },
+      { model: db.Ticket, as: 'tickets', attributes: ['id', 'ticket_type'] }, // Include tickets to check for existing installation
       { model: db.OrderStatusLog, as: 'statusLogs', order: [['status_updated_at', 'DESC']] }
     ],
     order: [['ordered_at', 'DESC']]
@@ -72,6 +73,34 @@ exports.createOrder = asyncHandler(async (req, res) => {
     order_status: order.current_order_status,
     status_remarks: 'Order created'
   });
+
+  // AUTO-CREATE INSTALLATION TICKET
+  try {
+    const installTicket = await db.Ticket.create({
+      ticket_type: 'installation',
+      kit_id: order.kit_id, // Ensure kit_id is passed in body
+      issue_description: `Installation for Order #ORD-${order.id}. Customer: ${order.customer_name || 'N/A'}. Location: ${order.location || 'N/A'}`,
+      priority: 'Medium',
+      source: 'System',
+      created_by_user_id: order.ordered_by_user_id || 1, // Default to admin if nul
+      assigned_technician_id: null,
+      ticket_status: 'created',
+      order_id: order.id
+    });
+
+    console.log(`✅ Auto-created Installation Ticket #${installTicket.id} for Order #${order.id}`);
+
+    // Log the action
+    await db.TicketLog.create({
+      ticket_id: installTicket.id,
+      action_taken: 'Ticket Auto-Created',
+      remarks: `System generated installation ticket for Order #${order.id}`
+    });
+
+  } catch (ticketErr) {
+    console.error("❌ Failed to auto-create installation ticket:", ticketErr);
+    // We don't block order creation if ticket fails, but we should log it.
+  }
 
   // Trigger Alert
   await db.Alert.create({

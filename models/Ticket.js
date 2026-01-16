@@ -25,8 +25,16 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       allowNull: true
     },
+    order_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'orders',
+        key: 'id'
+      }
+    },
     ticket_status: {
-      type: DataTypes.ENUM('created', 'assigned', 'in_progress', 'completed', 'closed'),
+      type: DataTypes.ENUM('created', 'assigned', 'in_progress', 'deployed', 'completed', 'closed', 'rejected'),
       allowNull: false,
       defaultValue: 'created'
     },

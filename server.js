@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 
-// when any one  Assign Technician , at same time it must 
+
 
 const envPath = path.join(__dirname, '.env');
 if (!fs.existsSync(envPath)) {

@@ -157,7 +157,16 @@ exports.deleteOrder = asyncHandler(async (req, res) => {
 });
 
 exports.getUniqueCustomers = asyncHandler(async (req, res) => {
+  const { user_id } = req.query;
+  const where = {};
+
+  // If user_id is provided, only fetch orders for that user
+  if (user_id) {
+    where.ordered_by_user_id = user_id;
+  }
+
   const orders = await db.Order.findAll({
+    where,
     attributes: ['contact_number', 'customer_name', 'company', 'office_incharge', 'email', 'ordered_at'],
     order: [['ordered_at', 'DESC']]
   });

@@ -39,6 +39,26 @@ exports.getAllKits = asyncHandler(async (req, res) => {
   res.json({ success: true, data: kits });
 });
 
+exports.getKitsSimple = asyncHandler(async (req, res) => {
+  const { status } = req.query;
+  const where = {};
+  if (status) where.kit_status = status;
+
+  const kits = await db.Kit.findAll({
+    where,
+    order: [['id', 'DESC']]
+  });
+  res.json({ success: true, data: kits });
+});
+
+exports.getKitList = asyncHandler(async (req, res) => {
+  const kits = await db.Kit.findAll({
+    attributes: ['id', 'kit_batch_id', 'kit_serial_number', 'kit_status'],
+    order: [['id', 'DESC']]
+  });
+  res.json({ success: true, data: kits });
+});
+
 exports.getKitById = asyncHandler(async (req, res) => {
   const kit = await db.Kit.findByPk(req.params.id, {
     include: [

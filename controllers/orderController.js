@@ -44,7 +44,7 @@ exports.getAllOrders = asyncHandler(async (req, res) => {
     where,
     include: [
       { model: db.Kit, as: 'kit' },
-      { model: db.Ticket, as: 'tickets', attributes: ['id', 'ticket_type'] }, // Include tickets to check for existing installation
+      { model: db.Ticket, as: 'tickets', attributes: ['id', 'ticket_type', 'ticket_status'] }, // Include tickets to check for existing installation
       { model: db.OrderStatusLog, as: 'statusLogs', order: [['status_updated_at', 'DESC']] }
     ],
     order: [['ordered_at', 'DESC']]

@@ -12,7 +12,11 @@ exports.getAllTickets = asyncHandler(async (req, res) => {
   const tickets = await db.Ticket.findAll({
     where,
     include: [
-      { model: db.Kit, as: 'kit' },
+      {
+        model: db.Kit,
+        as: 'kit',
+        include: [{ model: db.KitBatch, as: 'batch' }]
+      },
       { model: db.Order, as: 'order' }, // Include Order
       { model: db.TicketLog, as: 'logs', order: [['logged_at', 'DESC']] },
       { model: db.TicketImage, as: 'images' },
@@ -109,7 +113,8 @@ exports.createTicket = asyncHandler(async (req, res) => {
     source,
     scheduled_date,
     created_by_user_id: finalUserId || null,
-    ticket_status: 'created',
+    ticket_status: req.body.assigned_technician_id ? 'assigned' : 'created',
+    assigned_technician_id: req.body.assigned_technician_id || null,
     order_id: order_id || null // Save order_id
   };
 

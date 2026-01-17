@@ -49,6 +49,24 @@ exports.getTicketsByTechnician = asyncHandler(async (req, res) => {
   res.json({ success: true, data: tickets });
 });
 
+exports.getTicketsByPublicUser = asyncHandler(async (req, res) => {
+  const { id } = req.params; // User ID from route
+
+  const tickets = await db.Ticket.findAll({
+    where: { created_by_user_id: id },
+    include: [
+      { model: db.Kit, as: 'kit' },
+      { model: db.Order, as: 'order' },
+      { model: db.TicketLog, as: 'logs', order: [['logged_at', 'DESC']] },
+      { model: db.TicketImage, as: 'images' },
+      { model: db.UserProfile, as: 'technician', attributes: ['id', 'first_name', 'last_name', 'email'] },
+      { model: db.UserProfile, as: 'creator', attributes: ['id', 'first_name', 'last_name'] }
+    ],
+    order: [['created_at', 'DESC']]
+  });
+  res.json({ success: true, data: tickets });
+});
+
 exports.getTicketById = asyncHandler(async (req, res) => {
   const ticket = await db.Ticket.findByPk(req.params.id, {
     include: [
@@ -134,6 +152,14 @@ exports.createTicket = asyncHandler(async (req, res) => {
     kit_id: finalKitId || null
   });
 
+  // Update Kit Status for Installation
+  if (ticket_type === 'installation' && finalKitId) {
+    await db.Kit.update(
+      { kit_status: 'reserved' },
+      { where: { id: finalKitId } }
+    );
+  }
+
   res.status(201).json({ success: true, data: ticket });
 });
 
@@ -179,8 +205,8 @@ exports.updateTicket = asyncHandler(async (req, res) => {
   // Trigger if (Assigning Tech) OR (Completing Ticket)
   // We relax the check: if technician is present/assigned, we try to sync.
   const hasTech = assigned_technician_id || ticket.assigned_technician_id;
-  const isAssignment = hasTech && (incomingStatus === 'assigned' || ticket.ticket_status === 'assigned' || ticket.ticket_status === 'created');
-  const isCompletion = incomingStatus === 'completed';
+  const isAssignment = hasTech && (incomingStatus === 'assigned' || incomingStatus === 'in_progress' || ticket.ticket_status === 'assigned' || ticket.ticket_status === 'created');
+  const isCompletion = ['completed', 'deployed', 'closed'].includes(incomingStatus);
 
   if ((isAssignment || isCompletion) && currentTicketType.includes('installation')) {
     try {
@@ -258,6 +284,20 @@ exports.updateTicket = asyncHandler(async (req, res) => {
           });
           actionLog = `Deployment #${deployment.id} created (Pending)`;
         }
+
+        // Update Kit Status to 'reserved' (Processing)
+        const [numUpdated] = await db.Kit.update(
+          { kit_status: 'reserved' },
+          { where: { id: ticket.kit_id } }
+        );
+        if (numUpdated > 0) {
+          await db.Alert.create({
+            alert_category: 'inventory',
+            alert_description: `Kit #${ticket.kit_id} reserved for installation (Ticket #${ticket.id})`,
+            alert_status: 'open',
+            kit_id: ticket.kit_id
+          });
+        }
       }
 
       // --- SCENARIO B: COMPLETION (Status -> Active) ---
@@ -281,6 +321,13 @@ exports.updateTicket = asyncHandler(async (req, res) => {
           { kit_status: 'deployed' },
           { where: { id: ticket.kit_id } }
         );
+
+        await db.Alert.create({
+          alert_category: 'inventory',
+          alert_description: `Kit #${ticket.kit_id} marked as Deployed (Ticket #${ticket.id} Completed)`,
+          alert_status: 'open',
+          kit_id: ticket.kit_id
+        });
 
         // Update Order
         if (order && order.current_order_status !== 'delivered') {

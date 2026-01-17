@@ -52,6 +52,56 @@ exports.getAllOrders = asyncHandler(async (req, res) => {
   res.json({ success: true, data: orders });
 });
 
+exports.getOrdersByPublicUser = asyncHandler(async (req, res) => {
+  const { id } = req.params; // User ID from route
+
+  const orders = await db.Order.findAll({
+    where: { ordered_by_user_id: id },
+    include: [
+      { model: db.Kit, as: 'kit' },
+      { model: db.Ticket, as: 'tickets', attributes: ['id', 'ticket_type', 'ticket_status'] },
+      { model: db.OrderStatusLog, as: 'statusLogs', order: [['status_updated_at', 'DESC']] }
+    ],
+    order: [['ordered_at', 'DESC']]
+  });
+  res.json({ success: true, data: orders });
+});
+
+exports.getOrdersByTechnician = asyncHandler(async (req, res) => {
+  const { id } = req.params; // Technician ID from route
+
+  // 1. Fetch Tickets assigned to this technician
+  const tickets = await db.Ticket.findAll({
+    where: { assigned_technician_id: id },
+    attributes: ['order_id', 'kit_id']
+  });
+
+  const orderIds = tickets.map(t => t.order_id).filter(Boolean);
+  const kitIds = tickets.map(t => t.kit_id).filter(Boolean);
+
+  if (orderIds.length === 0 && kitIds.length === 0) {
+    return res.json({ success: true, data: [] });
+  }
+
+  // 2. Fetch Orders linked to these tickets (via order_id or kit_id)
+  const orders = await db.Order.findAll({
+    where: {
+      [db.Sequelize.Op.or]: [
+        { id: { [db.Sequelize.Op.in]: orderIds } },
+        { kit_id: { [db.Sequelize.Op.in]: kitIds } }
+      ]
+    },
+    include: [
+      { model: db.Kit, as: 'kit' },
+      { model: db.Ticket, as: 'tickets', attributes: ['id', 'ticket_type', 'ticket_status'] },
+      { model: db.OrderStatusLog, as: 'statusLogs', order: [['status_updated_at', 'DESC']] }
+    ],
+    order: [['ordered_at', 'DESC']]
+  });
+
+  res.json({ success: true, data: orders });
+});
+
 exports.getOrderById = asyncHandler(async (req, res) => {
   const order = await db.Order.findByPk(req.params.id, {
     include: [

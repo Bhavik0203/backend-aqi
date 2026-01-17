@@ -57,6 +57,60 @@ exports.getAllAlerts = asyncHandler(async (req, res) => {
   res.json({ success: true, data: alerts });
 });
 
+exports.getAlertsByPublicUser = asyncHandler(async (req, res) => {
+  const { id } = req.params; // User ID from route
+
+  // 1. Fetch Orders placed by this user to get their Kit IDs
+  const orders = await db.Order.findAll({
+    where: { ordered_by_user_id: id },
+    attributes: ['kit_id']
+  });
+
+  const userKitIds = orders.map(o => o.kit_id).filter(id => id);
+
+  if (userKitIds.length === 0) {
+    return res.json({ success: true, data: [] });
+  }
+
+  // 2. Fetch Alerts associated with these Kits
+  const alerts = await db.Alert.findAll({
+    where: {
+      kit_id: { [db.Sequelize.Op.in]: userKitIds }
+    },
+    include: [{ model: db.Kit, as: 'kit' }],
+    order: [['created_at', 'DESC']]
+  });
+
+  res.json({ success: true, data: alerts });
+});
+
+exports.getAlertsByTechnician = asyncHandler(async (req, res) => {
+  const { id } = req.params; // Technician ID
+
+  // 1. Fetch Tickets assigned to this technician to get relevant Kit IDs
+  const tickets = await db.Ticket.findAll({
+    where: { assigned_technician_id: id },
+    attributes: ['kit_id']
+  });
+
+  const techKitIds = tickets.map(t => t.kit_id).filter(Boolean);
+
+  if (techKitIds.length === 0) {
+    return res.json({ success: true, data: [] });
+  }
+
+  // 2. Fetch Alerts for those Kits
+  const alerts = await db.Alert.findAll({
+    where: {
+      kit_id: { [db.Sequelize.Op.in]: techKitIds }
+    },
+    include: [{ model: db.Kit, as: 'kit' }],
+    order: [['created_at', 'DESC']]
+  });
+
+  res.json({ success: true, data: alerts });
+});
+
 exports.getAlertById = asyncHandler(async (req, res) => {
   const alert = await db.Alert.findByPk(req.params.id, {
     include: [{ model: db.Kit, as: 'kit' }]

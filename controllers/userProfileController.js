@@ -107,11 +107,11 @@ exports.createProfile = asyncHandler(async (req, res) => {
   const rolePrefix = role.label.replace(/\s+/g, '');
   const autoPassword = `${rolePrefix}@${sequence}`;
 
-  // Auto-Generate Name as well (Requested: "this name must be as per roles")
-  // We will set First Name = Role Label, Last Name = Sequence
-  // Example: Name: "Admin", Last Name: "001" -> Full Name "Admin 001"
-  req.body.first_name = role.label; // e.g. "Admin"
-  req.body.last_name = sequence;    // e.g. "001"
+  // Auto-Generate Name ONLY if not provided
+  if (!req.body.first_name) {
+    req.body.first_name = role.label; // e.g. "Admin"
+    req.body.last_name = sequence;    // e.g. "001"
+  }
 
   // Hash password
   const salt = await bcrypt.genSalt(10);

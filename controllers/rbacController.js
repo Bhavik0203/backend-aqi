@@ -190,6 +190,24 @@ exports.updatePermission = async (req, res) => {
     }
 }
 
+// Delete Permission
+exports.deletePermission = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const permission = await Permission.findByPk(id);
+
+        if (!permission) {
+            return res.status(404).json({ success: false, message: 'Permission not found' });
+        }
+
+        await permission.destroy();
+        res.json({ success: true, message: 'Permission deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting permission:', error);
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+}
+
 // Toggle Permission for Role
 exports.toggleRolePermission = async (req, res) => {
     try {

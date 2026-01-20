@@ -13,7 +13,7 @@ router.delete('/roles/:id', rbacController.deleteRole);
 // Permission (Function) management
 router.post('/permissions', rbacController.createPermission);
 router.put('/permissions/:id', rbacController.updatePermission);
-// router.delete('/permissions/:id', rbacController.deletePermission);
+router.delete('/permissions/:id', rbacController.deletePermission);
 
 // Matrix updates
 router.post('/toggle', rbacController.toggleRolePermission);

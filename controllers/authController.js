@@ -8,6 +8,8 @@ const generateToken = (id) => {
     });
 };
 
+const { sendUserCredentialsEmail } = require('../utils/emailService');
+
 exports.register = async (req, res) => {
     const { first_name, last_name, email, password } = req.body;
 
@@ -22,15 +24,32 @@ exports.register = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, salt);
 
         // Default role 'Public User' (ID 4 based on previous context), or lookup
-        const publicRole = await db.Role.findOne({ where: { label: 'Public User' } });
+        // Enforcing Public User role selection logic
+        let publicRole = await db.Role.findOne({ where: { label: 'Public User' } });
+
+        // If exact label match fails, try key 'public_user' as fallback
+        if (!publicRole) {
+            publicRole = await db.Role.findOne({ where: { key: 'public_user' } });
+        }
+
+        const roleId = publicRole ? publicRole.id : 4;
+        const roleLabel = publicRole ? publicRole.label : 'Public User';
 
         const user = await db.UserProfile.create({
             first_name,
             last_name,
             email,
             password: hashedPassword,
-            role_id: publicRole ? publicRole.id : 4, // Fallback
+            role_id: roleId,
             status: 'Available'
+        });
+
+        // Send Welcome Email with Credentials
+        await sendUserCredentialsEmail(email, {
+            first_name,
+            role: roleLabel,
+            email,
+            password // Sending plain text password as requested for "registration mail"
         });
 
         res.status(201).json({

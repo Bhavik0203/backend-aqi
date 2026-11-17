@@ -1,11 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 
-
-
-
+// Only require a physical .env file locally. On Render, variables come from the dashboard.
 const envPath = path.join(__dirname, '.env');
-if (!fs.existsSync(envPath)) {
+if (process.env.NODE_ENV !== 'production' && !fs.existsSync(envPath)) {
   console.error('❌ .env file not found!');
   console.log('📝 Please create a .env file with your database credentials.');
   console.log('💡 You can copy env.template to .env and update the values:');
@@ -29,7 +27,7 @@ const errorHandler = require('./middleware/errorHandler');
 require('./config/firebase');
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(morgan('dev'));
@@ -79,15 +77,15 @@ const startServer = async () => {
     await db.sequelize.authenticate();
     console.log('✅ Database connection established successfully.');
 
-    const isDev = (process.env.NODE_ENV || 'development') === 'development';
-    if (isDev && process.env.SYNC_DB !== 'false') {
+    // Set SYNC_DB=true to create/update tables (use for the first deploy, then set to false)
+    if (process.env.SYNC_DB === 'true') {
       await db.sequelize.sync({ alter: true });
       console.log('✅ Database synchronized.');
     }
 
-    const server = app.listen(PORT, () => {
+    const server = app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Server is running on port ${PORT}`);
-      console.log(`📡 API available at http://localhost:${PORT}/api`);
+      console.log(`📡 API available at /api`);
     });
 
     server.on('error', (error) => {
@@ -115,11 +113,9 @@ const startServer = async () => {
       console.error('   The server could not connect to PostgreSQL.\n');
       console.error('🔍 Please check:');
       console.error('   1. PostgreSQL is running');
-      console.error('   2. Database credentials in .env file are correct');
+      console.error('   2. Database credentials in environment variables are correct');
       console.error('   3. Database "' + (process.env.DB_NAME || 'pritomatic_aqi') + '" exists');
       console.error('   4. User "' + (process.env.DB_USER || 'postgres') + '" has proper permissions\n');
-      console.error('💡 To create the database, run:');
-      console.error('   createdb ' + (process.env.DB_NAME || 'pritomatic_aqi'));
       console.error('\n📝 Current database configuration:');
       console.error('   Host: ' + (process.env.DB_HOST || 'localhost'));
       console.error('   Port: ' + (process.env.DB_PORT || 5432));
@@ -143,4 +139,3 @@ process.on('SIGTERM', async () => {
 });
 
 module.exports = app;
-

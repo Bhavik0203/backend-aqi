@@ -26,7 +26,7 @@ const morgan = require('morgan');
 const db = require('./models');
 const routes = require('./routes');
 const errorHandler = require('./middleware/errorHandler');
-require('./config/firebase'); 
+require('./config/firebase');
 
 const app = express();
 const PORT = 5000;
@@ -42,7 +42,7 @@ app.use('/api', routes);
 app.get('/', (req, res) => {
   res.json({
     success: true,
-    message: 'PRITOMATIC-AQI Platform API',
+    message: 'Mahatech -AQI Platform API',
     version: '1.0.0',
     endpoints: {
       health: '/api/health',

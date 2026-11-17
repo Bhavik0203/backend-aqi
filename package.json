@@ -1,7 +1,7 @@
 {
   "name": "pritomatic-aqi-backend",
   "version": "1.0.0",
-  "description": "Backend API for PRITOMATIC-AQI Platform",
+  "description": "Backend API for Mahatech -AQI Platform",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

@@ -15,11 +15,11 @@ const transporter = nodemailer.createTransport({
  * @param {object} userDetails - User object { firstName, lastName, role, password, email }
  */
 const sendUserCredentialsEmail = async (toEmail, userDetails) => {
-    const subject = 'Welcome to Pritomatic AQI Dashboard - Your Credentials';
+    const subject = 'Welcome to Mahatech -AQI Dashboard - Your Credentials';
     const html = `
         <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 5px;">
             <h2 style="color: #3256AA;">Welcome, ${userDetails.first_name}!</h2>
-            <p>Your account has been created for the Pritomatic AQI Dashboard.</p>
+            <p>Your account has been created for the Mahatech -AQI Dashboard.</p>
             <p>Here are your login credentials:</p>
             <table style="width: 100%; max-width: 400px; margin-bottom: 20px;">
                 <tr>
@@ -42,7 +42,7 @@ const sendUserCredentialsEmail = async (toEmail, userDetails) => {
 
     try {
         await transporter.sendMail({
-            from: '"Pritomatic Admin" <bhavikdemos@gmail.com>',
+            from: '"Mahatech Admin" <bhavikdemos@gmail.com>',
             to: toEmail,
             subject: subject,
             html: html
@@ -65,7 +65,7 @@ const sendOrderConfirmationEmail = async (toEmail, orderDetails) => {
         <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 5px;">
             <h2 style="color: #3256AA;">Order Placed Successfully!</h2>
             <p>Dear ${orderDetails.customer_name || 'Customer'},</p>
-            <p>Thank you for your order with Pritomatic AQI.</p>
+            <p>Thank you for your order with Mahatech -AQI.</p>
             <p><strong>Order Number:</strong> ${orderDetails.order_number}</p>
             <p><strong>Status:</strong> ${orderDetails.current_order_status}</p>
             <br>
@@ -84,7 +84,7 @@ const sendOrderConfirmationEmail = async (toEmail, orderDetails) => {
 
     try {
         await transporter.sendMail({
-            from: '"Pritomatic Orders" <bhavikdemos@gmail.com>',
+            from: '"Mahatech Orders" <bhavikdemos@gmail.com>',
             to: toEmail,
             subject: subject,
             html: html

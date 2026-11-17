@@ -1,6 +1,6 @@
-# PRITOMATIC-AQI Platform Backend API
+# Mahatech -AQI Platform Backend API
 
-A comprehensive RESTful API backend for the PRITOMATIC-AQI Platform built with Node.js, Express.js, and Sequelize ORM.
+A comprehensive RESTful API backend for the Mahatech -AQI Platform built with Node.js, Express.js, and Sequelize ORM.
 
 ## Tech Stack
 

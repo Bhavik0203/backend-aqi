@@ -79,7 +79,7 @@ const startServer = async () => {
 
     // Set SYNC_DB=true to create/update tables (use for the first deploy, then set to false)
     if (process.env.SYNC_DB === 'true') {
-      await db.sequelize.sync({ alter: true });
+      await db.sequelize.sync();
       console.log('✅ Database synchronized.');
     }
 

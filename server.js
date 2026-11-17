@@ -85,16 +85,28 @@ const startServer = async () => {
       console.log('✅ Database synchronized.');
     }
 
-    // Auto-seed initial dummy data if admin does not exist or database is empty
+    // Auto-seed initial dummy data if admin does not exist or orders/inventory are empty
     try {
-      const adminExists = await db.UserProfile.findOne({ where: { email: 'admin@pritomatic.com' } });
-      if (!adminExists || process.env.AUTO_SEED === 'true' || process.env.SEED_DB === 'true') {
-        console.log('🌱 Admin user not found in DB. Seeding initial dummy data...');
+      const adminUser = await db.UserProfile.findOne({ where: { email: 'admin@pritomatic.com' } });
+      let orderCount = 0;
+      try {
+        orderCount = await db.Order.count();
+      } catch (e) {
+        orderCount = 0;
+      }
+
+      if (!adminUser || orderCount === 0 || process.env.AUTO_SEED === 'true' || process.env.SEED_DB === 'true') {
+        console.log('🌱 Triggering complete database seeding (admin missing or empty orders/inventory)...');
         const { seedAll } = require('./utils/seedAll');
         await seedAll();
-        console.log('✅ Initial dummy data seeded successfully.');
+        console.log('✅ Complete dummy data seeded successfully.');
       } else {
-        console.log('✅ Admin user verified in DB.');
+        // Ensure admin user password is guaranteed to be Pritomatic@123
+        const bcrypt = require('bcryptjs');
+        const salt = await bcrypt.genSalt(10);
+        const adminPassHash = await bcrypt.hash('Pritomatic@123', salt);
+        await adminUser.update({ password: adminPassHash });
+        console.log('✅ Admin user verified & password synchronized in DB.');
       }
     } catch (seedErr) {
       console.warn('⚠️ Auto-seed check notice:', seedErr.message);

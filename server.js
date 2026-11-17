@@ -36,6 +36,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/api', routes);
+app.use('/', require('./routes/compatibilityRoutes'));
 
 app.get('/', (req, res) => {
   res.json({

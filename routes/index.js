@@ -37,6 +37,7 @@ router.use('/transactions', transactionRoutes);
 router.use('/upload', require('./uploadRoutes'));
 router.use('/auth', require('./authRoutes'));
 router.use('/seed', require('./seedRoutes'));
+router.use('/', require('./publicAqiRoutes'));
 
 
 router.get('/health', (req, res) => {

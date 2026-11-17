@@ -32,7 +32,6 @@ async function seedAll() {
       roles[r.key] = roleInstance;
     }
     summary.roles = Object.keys(roles).length;
-    console.log(`✅ Roles verified (${summary.roles} roles).`);
 
     // Permissions
     const permissionsList = [
@@ -77,7 +76,7 @@ async function seedAll() {
     await roles.business_user.setPermissions(clientPerms);
     await roles.public_user.setPermissions(clientPerms);
 
-    // 2. User Profiles (8 diverse users)
+    // 2. User Profiles
     const salt = await bcrypt.genSalt(10);
     const defaultHashedPassword = await bcrypt.hash('Pritomatic@123', salt);
 
@@ -209,11 +208,12 @@ async function seedAll() {
       }
     }
 
-    // 3. Sensor Batches & Items
+    // 3. INVENTORY MANAGEMENT: Sensor Batches & Sensor Items
     const sensorBatchConfigs = [
-      { code: 'SBATCH-2026-001', supplier: 'AeroSense Technologies', total: 100, reqDate: '2026-01-10', recDate: '2026-01-20', alloc: 40, rem: 60, status: 'partially_allocated' },
+      { code: 'SBATCH-2026-001', supplier: 'AeroSense Technologies', total: 100, reqDate: '2026-01-10', recDate: '2026-01-20', alloc: 60, rem: 40, status: 'received' },
       { code: 'SBATCH-2026-002', supplier: 'Sensirion AG Switzerland', total: 80, reqDate: '2026-01-15', recDate: '2026-01-25', alloc: 80, rem: 0, status: 'fully_allocated' },
-      { code: 'SBATCH-2026-003', supplier: 'Bosch Sensortec Germany', total: 50, reqDate: '2026-02-01', recDate: null, alloc: 0, rem: 50, status: 'pending' }
+      { code: 'SBATCH-2026-003', supplier: 'Bosch Sensortec Germany', total: 60, reqDate: '2026-01-28', recDate: '2026-02-05', alloc: 25, rem: 35, status: 'partially_allocated' },
+      { code: 'SBATCH-2026-004', supplier: 'Alphasense Environmental UK', total: 50, reqDate: '2026-02-10', recDate: null, alloc: 0, rem: 50, status: 'pending' }
     ];
 
     const sensorBatches = {};
@@ -235,27 +235,31 @@ async function seedAll() {
     }
     summary.sensorBatches = Object.keys(sensorBatches).length;
 
-    // Sensor Items
-    for (let i = 1; i <= 15; i++) {
-      const isAllocated = i <= 10;
+    // 30 Sensor Items
+    const warehouseLocations = ['Assembly Line A (Pune)', 'Assembly Line B (Pune)', 'Clean Room 3', 'Central Warehouse Pune', 'Mumbai Logistics Hub'];
+    for (let i = 1; i <= 30; i++) {
+      const isAllocated = i <= 20;
       const itemCode = `SN-OPT-00${i < 10 ? '0' + i : i}`;
+      const batchCode = i <= 15 ? 'SBATCH-2026-001' : (i <= 25 ? 'SBATCH-2026-002' : 'SBATCH-2026-003');
       await db.SensorBatchItem.findOrCreate({
         where: { sensor_item_code: itemCode },
         defaults: {
-          sensor_batch_id: sensorBatches['SBATCH-2026-001'].id,
+          sensor_batch_id: sensorBatches[batchCode].id,
           sensor_item_code: itemCode,
           item_status: isAllocated ? 'allocated' : 'available',
           received_date: '2026-01-20',
           allocated_date: isAllocated ? '2026-02-01' : null,
-          current_location: isAllocated ? 'Assembly Line 1' : 'Central Warehouse Pune'
+          current_location: warehouseLocations[i % warehouseLocations.length]
         }
       });
     }
+    summary.sensorItems = 30;
 
-    // 4. Kit Batches & Kits
+    // 4. INVENTORY MANAGEMENT: Kit Batches & Kits
     const kitBatchConfigs = [
-      { code: 'KBATCH-2026-001', total: 50, date: '2026-02-01', status: 'completed', alloc: 15, rem: 35, remarks: 'High accuracy ambient pole monitors' },
-      { code: 'KBATCH-2026-002', total: 50, date: '2026-02-10', status: 'in_progress', alloc: 10, rem: 40, remarks: 'Transit bus roof-mounted monitors' }
+      { code: 'KBATCH-2026-001', total: 50, date: '2026-02-01', status: 'completed', alloc: 20, rem: 30, remarks: 'Certified IP67 weather-sealed with solar battery integration' },
+      { code: 'KBATCH-2026-002', total: 50, date: '2026-02-10', status: 'in_progress', alloc: 15, rem: 35, remarks: 'Transit bus roof-mounted monitors with vibration dampening' },
+      { code: 'KBATCH-2026-003', total: 30, date: '2026-02-15', status: 'on_hold', alloc: 5, rem: 25, remarks: 'Industrial perimeter fence monitors - awaiting gas sensor modules' }
     ];
 
     const kitBatches = {};
@@ -277,7 +281,7 @@ async function seedAll() {
     }
     summary.kitBatches = Object.keys(kitBatches).length;
 
-    // 15 Kits
+    // 20 Kits
     const kitSpecs = [
       { serial: 'AQI-KIT-101', status: 'deployed', location: 'Pune - Shivajinagar', customer: 'Pune Municipal Corporation', batch: 'KBATCH-2026-001' },
       { serial: 'AQI-KIT-102', status: 'deployed', location: 'Pune - Baner High Street', customer: 'Pune Smart City', batch: 'KBATCH-2026-001' },
@@ -287,13 +291,18 @@ async function seedAll() {
       { serial: 'AQI-KIT-106', status: 'deployed', location: 'Delhi - Connaught Place', customer: 'State Pollution Control Board', batch: 'KBATCH-2026-001' },
       { serial: 'AQI-KIT-107', status: 'deployed', location: 'Delhi - Anand Vihar ISBT', customer: 'Delhi Clean Air Corp', batch: 'KBATCH-2026-002' },
       { serial: 'AQI-KIT-108', status: 'deployed', location: 'Bangalore - Whitefield ITPL', customer: 'BBMP Smart City', batch: 'KBATCH-2026-001' },
-      { serial: 'AQI-KIT-109', status: 'available', location: 'Central Warehouse Pune', customer: null, batch: 'KBATCH-2026-001' },
-      { serial: 'AQI-KIT-110', status: 'available', location: 'Central Warehouse Pune', customer: null, batch: 'KBATCH-2026-001' },
-      { serial: 'AQI-KIT-111', status: 'available', location: 'Mumbai Logistics Hub', customer: null, batch: 'KBATCH-2026-002' },
-      { serial: 'AQI-KIT-112', status: 'available', location: 'Delhi Regional Hub', customer: null, batch: 'KBATCH-2026-002' },
-      { serial: 'AQI-KIT-113', status: 'reserved', location: 'Central Warehouse Pune', customer: 'Gujarat Pollution Board', batch: 'KBATCH-2026-001' },
-      { serial: 'AQI-KIT-114', status: 'reserved', location: 'Central Warehouse Pune', customer: 'Hyderabad Metro Corp', batch: 'KBATCH-2026-001' },
-      { serial: 'AQI-KIT-115', status: 'reserved', location: 'Central Warehouse Pune', customer: 'Chennai Port Authority', batch: 'KBATCH-2026-002' }
+      { serial: 'AQI-KIT-109', status: 'deployed', location: 'Chennai - T. Nagar Commercial Hub', customer: 'Tamil Nadu Pollution Board', batch: 'KBATCH-2026-001' },
+      { serial: 'AQI-KIT-110', status: 'deployed', location: 'Hyderabad - HITEC City', customer: 'Telangana Clean Air Authority', batch: 'KBATCH-2026-001' },
+      { serial: 'AQI-KIT-111', status: 'available', location: 'Central Warehouse Pune', customer: null, batch: 'KBATCH-2026-001' },
+      { serial: 'AQI-KIT-112', status: 'available', location: 'Central Warehouse Pune', customer: null, batch: 'KBATCH-2026-001' },
+      { serial: 'AQI-KIT-113', status: 'available', location: 'Mumbai Logistics Hub', customer: null, batch: 'KBATCH-2026-002' },
+      { serial: 'AQI-KIT-114', status: 'available', location: 'Delhi Regional Hub', customer: null, batch: 'KBATCH-2026-002' },
+      { serial: 'AQI-KIT-115', status: 'available', location: 'Bangalore Hub', customer: null, batch: 'KBATCH-2026-001' },
+      { serial: 'AQI-KIT-116', status: 'available', location: 'Chennai Hub', customer: null, batch: 'KBATCH-2026-001' },
+      { serial: 'AQI-KIT-117', status: 'reserved', location: 'Central Warehouse Pune', customer: 'Gujarat Pollution Board', batch: 'KBATCH-2026-001' },
+      { serial: 'AQI-KIT-118', status: 'reserved', location: 'Central Warehouse Pune', customer: 'Rajasthan Clean Air Mission', batch: 'KBATCH-2026-001' },
+      { serial: 'AQI-KIT-119', status: 'reserved', location: 'Central Warehouse Pune', customer: 'Kolkata Port Trust', batch: 'KBATCH-2026-003' },
+      { serial: 'AQI-KIT-120', status: 'reserved', location: 'Central Warehouse Pune', customer: 'Kochi Smart City', batch: 'KBATCH-2026-003' }
     ];
 
     const createdKits = [];
@@ -315,7 +324,7 @@ async function seedAll() {
     summary.kits = createdKits.length;
     console.log(`✅ Kits seeded (${summary.kits} kits).`);
 
-    // 5. Deployments
+    // 5. DEPLOYMENTS
     const deployedKits = createdKits.filter(k => k.kit_status === 'deployed');
     const techUser1 = users['john.doe@pritomatic.com']?.id || 1;
     const techUser2 = users['robert.b@pritomatic.com']?.id || 1;
@@ -336,20 +345,158 @@ async function seedAll() {
           assigned_technician_id: assignedTech,
           deployment_location: kit.current_location,
           installation_date: new Date('2026-02-15'),
-          deployment_status: i === 6 ? 'maintenance' : 'active'
+          deployment_status: i === 7 ? 'maintenance' : 'active'
         }
       });
     }
     summary.deployments = deployedKits.length;
 
-    // 6. Orders & Order Status Logs
+    // 6. ORDER MANAGEMENT: 8 Detailed Orders across all statuses
     const orderConfigs = [
-      { num: 'ORD-2026-001', kitIdx: 0, user: clientUser1, status: 'delivered', customer: 'Dr. Emily Davis', company: 'State Pollution Control Board', incharge: 'K. S. Verma', address: 'Civil Lines, Delhi' },
-      { num: 'ORD-2026-002', kitIdx: 1, user: clientUser2, status: 'delivered', customer: 'Rajesh Patil', company: 'Pune Municipal Corporation', incharge: 'S. Kulkarni', address: 'Shivajinagar, Pune' },
-      { num: 'ORD-2026-003', kitIdx: 2, user: clientUser2, status: 'shipped', customer: 'Rajesh Patil', company: 'Pune Municipal Corporation', incharge: 'A. Joshi', address: 'Kothrud, Pune' },
-      { num: 'ORD-2026-004', kitIdx: 3, user: clientUser1, status: 'out_for_delivery', customer: 'Dr. Emily Davis', company: 'Maharashtra Pollution Board', incharge: 'M. Shinde', address: 'BKC, Mumbai' },
-      { num: 'ORD-2026-005', kitIdx: 4, user: clientUser1, status: 'order_confirmed', customer: 'Dr. Emily Davis', company: 'BEST Transport Corp', incharge: 'P. Tawde', address: 'Andheri, Mumbai' },
-      { num: 'ORD-2026-006', kitIdx: 5, user: clientUser1, status: 'received', customer: 'Dr. Emily Davis', company: 'State Pollution Control Board', incharge: 'N. Tyagi', address: 'Connaught Place, Delhi' }
+      {
+        num: 'ORD-2026-001',
+        kitIdx: 0,
+        user: clientUser1,
+        status: 'delivered',
+        customer: 'Dr. Emily Davis',
+        company: 'Delhi Pollution Control Committee',
+        incharge: 'K. S. Verma (Director)',
+        phone: '+919876543213',
+        email: 'emily.d@govt.in',
+        address: 'Plot 4, Institutional Area, Anand Vihar',
+        city: 'Delhi',
+        state: 'Delhi',
+        pincode: '110092',
+        amount: 45000.00,
+        orderDate: '2026-02-01',
+        deliverDate: '2026-02-12'
+      },
+      {
+        num: 'ORD-2026-002',
+        kitIdx: 1,
+        user: clientUser2,
+        status: 'delivered',
+        customer: 'Rajesh Patil',
+        company: 'Pune Municipal Corporation',
+        incharge: 'S. Kulkarni (Chief Environmental Officer)',
+        phone: '+919876543216',
+        email: 'rajesh.patil@punecorp.gov.in',
+        address: 'PMC Building, Shivajinagar',
+        city: 'Pune',
+        state: 'Maharashtra',
+        pincode: '411005',
+        amount: 90000.00,
+        orderDate: '2026-02-03',
+        deliverDate: '2026-02-14'
+      },
+      {
+        num: 'ORD-2026-003',
+        kitIdx: 2,
+        user: clientUser2,
+        status: 'shipped',
+        customer: 'Aakash Mehta',
+        company: 'Maharashtra Pollution Control Board',
+        incharge: 'P. Deshmukh (Zonal Officer)',
+        phone: '+919876543220',
+        email: 'aakash.mehta@mpcb.gov.in',
+        address: 'Kalpataru Point, Sion Circle',
+        city: 'Mumbai',
+        state: 'Maharashtra',
+        pincode: '400022',
+        amount: 45000.00,
+        orderDate: '2026-02-08',
+        deliverDate: null
+      },
+      {
+        num: 'ORD-2026-004',
+        kitIdx: 3,
+        user: clientUser1,
+        status: 'out_for_delivery',
+        customer: 'Priya Sharma',
+        company: 'Bangalore Smart City Ltd',
+        incharge: 'Anand Murthy (Project Manager)',
+        phone: '+919876543221',
+        email: 'priya.sharma@bbmp.gov.in',
+        address: 'N.R. Square, Corporation Circle',
+        city: 'Bangalore',
+        state: 'Karnataka',
+        pincode: '560002',
+        amount: 135000.00,
+        orderDate: '2026-02-10',
+        deliverDate: null
+      },
+      {
+        num: 'ORD-2026-005',
+        kitIdx: 4,
+        user: clientUser1,
+        status: 'order_confirmed',
+        customer: 'K. Narayanan',
+        company: 'Tamil Nadu Pollution Control Board',
+        incharge: 'R. Balaji (Superintending Engineer)',
+        phone: '+919876543222',
+        email: 'k.narayanan@tnpcb.gov.in',
+        address: '76 Mount Salai, Guindy',
+        city: 'Chennai',
+        state: 'Tamil Nadu',
+        pincode: '600032',
+        amount: 45000.00,
+        orderDate: '2026-02-12',
+        deliverDate: null
+      },
+      {
+        num: 'ORD-2026-006',
+        kitIdx: 5,
+        user: clientUser1,
+        status: 'received',
+        customer: 'Suresh Reddy',
+        company: 'Telangana State Pollution Control Board',
+        incharge: 'V. Srinivas (Env Engineer)',
+        phone: '+919876543223',
+        email: 'suresh.reddy@tspcb.telangana.gov.in',
+        address: 'Paryavarana Bhavan, Sanath Nagar',
+        city: 'Hyderabad',
+        state: 'Telangana',
+        pincode: '500018',
+        amount: 90000.00,
+        orderDate: '2026-02-14',
+        deliverDate: null
+      },
+      {
+        num: 'ORD-2026-007',
+        kitIdx: 6,
+        user: users['michael.w@public.com']?.id || clientUser1,
+        status: 'delivered',
+        customer: 'Michael Wilson',
+        company: 'Citizen Clean Air Initiative',
+        incharge: 'Michael Wilson',
+        phone: '+919876543214',
+        email: 'michael.w@public.com',
+        address: '4th Cross, 100 Feet Road, Indiranagar',
+        city: 'Bangalore',
+        state: 'Karnataka',
+        pincode: '560038',
+        amount: 35000.00,
+        orderDate: '2026-02-02',
+        deliverDate: '2026-02-09'
+      },
+      {
+        num: 'ORD-2026-008',
+        kitIdx: 7,
+        user: clientUser1,
+        status: 'delivered',
+        customer: 'Dr. Emily Davis',
+        company: 'State Pollution Control Board',
+        incharge: 'K. S. Verma',
+        phone: '+919876543213',
+        email: 'emily.d@govt.in',
+        address: 'Connaught Place Circle, Block B',
+        city: 'Delhi',
+        state: 'Delhi',
+        pincode: '110001',
+        amount: 45000.00,
+        orderDate: '2026-02-04',
+        deliverDate: '2026-02-15'
+      }
     ];
 
     const createdOrders = [];
@@ -365,33 +512,45 @@ async function seedAll() {
           customer_name: oc.customer,
           company: oc.company,
           office_incharge: oc.incharge,
+          contact_number: oc.phone,
+          email: oc.email,
           shipping_address: oc.address,
-          ordered_at: new Date('2026-02-01'),
-          delivered_at: oc.status === 'delivered' ? new Date('2026-02-15') : null
+          location: oc.address,
+          city: oc.city,
+          state: oc.state,
+          pincode: oc.pincode,
+          country: 'India',
+          total_amount: oc.amount,
+          ordered_at: new Date(oc.orderDate),
+          delivered_at: oc.deliverDate ? new Date(oc.deliverDate) : null
         }
       });
       createdOrders.push(order);
 
-      // Status logs
-      await db.OrderStatusLog.findOrCreate({
-        where: { order_id: order.id, order_status: oc.status },
-        defaults: {
-          order_id: order.id,
-          order_status: oc.status,
-          status_remarks: `Order transitioned to ${oc.status}`,
-          status_updated_at: new Date()
-        }
-      });
+      // Order Status Logs (Timeline)
+      const allStatuses = ['received', 'order_confirmed', 'shipped', 'out_for_delivery', 'delivered'];
+      const targetIdx = allStatuses.indexOf(oc.status);
+      for (let s = 0; s <= (targetIdx >= 0 ? targetIdx : 0); s++) {
+        const st = allStatuses[s];
+        await db.OrderStatusLog.findOrCreate({
+          where: { order_id: order.id, order_status: st },
+          defaults: {
+            order_id: order.id,
+            order_status: st,
+            status_remarks: `Status updated to ${st.replace('_', ' ').toUpperCase()} by logistics coordinator`,
+            status_updated_at: new Date(new Date(oc.orderDate).getTime() + s * 24 * 3600 * 1000)
+          }
+        });
+      }
     }
     summary.orders = createdOrders.length;
+    console.log(`✅ Orders seeded (${summary.orders} orders with status logs).`);
 
-    // 7. Transactions
-    const txMethods = ['Bank Transfer', 'UPI', 'Credit Card', 'NEFT', 'Bank Transfer', 'UPI'];
-    const txAmounts = [45000.00, 45000.00, 38000.00, 42000.00, 45000.00, 40000.00];
-
+    // 7. TRANSACTIONS
+    const txMethods = ['Bank Transfer', 'UPI', 'NEFT', 'Credit Card', 'Bank Transfer', 'UPI', 'UPI', 'NEFT'];
     for (let i = 0; i < createdOrders.length; i++) {
       const ord = createdOrders[i];
-      const isPaid = i < 4;
+      const isPaid = i !== 5;
       await db.Transaction.findOrCreate({
         where: { order_id: ord.id },
         defaults: {
@@ -399,26 +558,128 @@ async function seedAll() {
           transaction_id: `TXN-2026-00${i + 1}`,
           utr_no: `UTR9876543200${i + 1}`,
           customer_name: ord.customer_name,
-          amount: txAmounts[i],
+          amount: ord.total_amount || 45000.00,
           currency: 'INR',
           payment_status: isPaid ? 'completed' : 'pending',
-          payment_method: txMethods[i],
+          payment_method: txMethods[i % txMethods.length],
           transaction_date: new Date('2026-02-02')
         }
       });
     }
     summary.transactions = createdOrders.length;
 
-    // 8. Tickets (8 tickets)
+    // 8. MAINTENANCE & SUPPORT: 10 Comprehensive Service Tickets
     const ticketConfigs = [
-      { kitIdx: 0, type: 'installation', status: 'completed', prio: 'High', desc: 'Pole mounting & sensor telemetry calibration', remarks: 'Calibrated baseline OK', tech: techUser1 },
-      { kitIdx: 1, type: 'installation', status: 'completed', prio: 'Medium', desc: 'Solar battery & inverter hookup', remarks: 'Power stability verified', tech: techUser1 },
-      { kitIdx: 2, type: 'installation', status: 'deployed', prio: 'Medium', desc: 'Transit roof rack mounting', remarks: 'Vehicle vibration test passed', tech: techUser2 },
-      { kitIdx: 3, type: 'maintenance', status: 'in_progress', prio: 'High', desc: 'Laser PM2.5 sensor optic cleaning', remarks: 'Technician on-site', tech: techUser2 },
-      { kitIdx: 4, type: 'maintenance', status: 'assigned', prio: 'Medium', desc: 'Routine 30-day filter check', remarks: 'Scheduled for tomorrow', tech: techUser2 },
-      { kitIdx: 5, type: 'installation', status: 'completed', prio: 'High', desc: 'Central Delhi pole mount', remarks: 'GPS and cellular lock established', tech: techUser3 },
-      { kitIdx: 6, type: 'maintenance', status: 'in_progress', prio: 'High', desc: 'CO2 zero-point recalibration', remarks: 'Zero-gas test in progress', tech: techUser3 },
-      { kitIdx: 7, type: 'maintenance', status: 'closed', prio: 'Low', desc: 'Weather shield bolt tightening', remarks: 'Resolved and closed', tech: techUser1 }
+      {
+        kitIdx: 0,
+        type: 'installation',
+        status: 'completed',
+        prio: 'High',
+        desc: 'Pole-mounted ambient monitor installation & solar panel orientation at 45 degrees',
+        remarks: 'Installed and verified telemetry connection via 4G LTE. Baseline calibration OK.',
+        tech: techUser1,
+        creator: users['admin@pritomatic.com']?.id || 1,
+        scheduled: '2026-02-12'
+      },
+      {
+        kitIdx: 1,
+        type: 'installation',
+        status: 'completed',
+        prio: 'Medium',
+        desc: 'Streetlight bracket mounting and grid power tap installation',
+        remarks: 'Grid power stable, backup battery charged 100%. PM2.5 baseline matched reference.',
+        tech: techUser1,
+        creator: users['admin@pritomatic.com']?.id || 1,
+        scheduled: '2026-02-13'
+      },
+      {
+        kitIdx: 2,
+        type: 'installation',
+        status: 'deployed',
+        prio: 'High',
+        desc: 'Transit rooftop mount bracket vibration dampener retrofit on Kothrud depot bus',
+        remarks: 'Physical mounting completed. Telemetry testing active over 48 hours.',
+        tech: techUser2,
+        creator: clientUser2,
+        scheduled: '2026-02-14'
+      },
+      {
+        kitIdx: 3,
+        type: 'installation',
+        status: 'in_progress',
+        prio: 'High',
+        desc: 'BKC Commercial Hub outdoor station gantry installation',
+        remarks: 'Technician on-site mounting hardware to primary structure.',
+        tech: techUser2,
+        creator: clientUser1,
+        scheduled: '2026-02-16'
+      },
+      {
+        kitIdx: 4,
+        type: 'installation',
+        status: 'assigned',
+        prio: 'Medium',
+        desc: 'Andheri Station transit monitoring unit setup',
+        remarks: 'Dispatched hardware from depot. Assigned technician dispatched.',
+        tech: techUser2,
+        creator: users['admin@pritomatic.com']?.id || 1,
+        scheduled: '2026-02-17'
+      },
+      {
+        kitIdx: 5,
+        type: 'installation',
+        status: 'created',
+        prio: 'Medium',
+        desc: 'Connaught Place inner circle pole station setup',
+        remarks: 'Awaiting site clearance from municipal authority.',
+        tech: null,
+        creator: users['admin@pritomatic.com']?.id || 1,
+        scheduled: '2026-02-18'
+      },
+      {
+        kitIdx: 0,
+        type: 'maintenance',
+        status: 'in_progress',
+        prio: 'High',
+        desc: 'Laser particulate sensor optic chamber cleaning after dust storm',
+        remarks: 'Zero-point recalibration kit connected, testing optics chamber.',
+        tech: techUser1,
+        creator: users['admin@pritomatic.com']?.id || 1,
+        scheduled: '2026-02-16'
+      },
+      {
+        kitIdx: 1,
+        type: 'maintenance',
+        status: 'assigned',
+        prio: 'Low',
+        desc: 'Routine 30-day filter cartridge replacement and insect mesh cleaning',
+        remarks: 'Filter pack assigned from Pune central warehouse.',
+        tech: techUser1,
+        creator: clientUser2,
+        scheduled: '2026-02-17'
+      },
+      {
+        kitIdx: 6,
+        type: 'maintenance',
+        status: 'completed',
+        prio: 'High',
+        desc: 'Cellular IoT antenna re-orientation and SIM card reseat at Anand Vihar',
+        remarks: 'Signal improved from -98dBm to -68dBm, full data sync restored.',
+        tech: techUser3,
+        creator: clientUser1,
+        scheduled: '2026-02-15'
+      },
+      {
+        kitIdx: 7,
+        type: 'maintenance',
+        status: 'closed',
+        prio: 'Low',
+        desc: 'Pre-monsoon weather seal hydrophobic membrane inspection',
+        remarks: 'Seal intact, internal humidity normal at 42%. Ticket closed after QA review.',
+        tech: techUser1,
+        creator: users['admin@pritomatic.com']?.id || 1,
+        scheduled: '2026-02-10'
+      }
     ];
 
     const createdTickets = [];
@@ -432,29 +693,30 @@ async function seedAll() {
         defaults: {
           ticket_type: tc.type,
           kit_id: kit.id,
-          created_by_user_id: users['admin@pritomatic.com']?.id || 1,
+          created_by_user_id: tc.creator,
           assigned_technician_id: tc.tech,
           order_id: ord.id,
           ticket_status: tc.status,
           issue_description: tc.desc,
           closing_remarks: tc.remarks,
-          priority: tc.prio
+          priority: tc.prio,
+          scheduled_date: new Date(tc.scheduled)
         }
       });
       createdTickets.push(ticket);
 
-      // Ticket logs
+      // Ticket Action Logs
       await db.TicketLog.findOrCreate({
-        where: { ticket_id: ticket.id, action_taken: 'Inspection performed' },
+        where: { ticket_id: ticket.id, action_taken: 'Status update: ' + tc.status },
         defaults: {
           ticket_id: ticket.id,
-          action_taken: 'Inspection performed',
+          action_taken: 'Status update: ' + tc.status,
           remarks: tc.remarks,
-          logged_by_user_id: tc.tech
+          logged_by_user_id: tc.tech || tc.creator
         }
       });
 
-      // Ticket Image proof
+      // Ticket Image Proofs
       await db.TicketImage.findOrCreate({
         where: { ticket_id: ticket.id },
         defaults: {
@@ -465,8 +727,9 @@ async function seedAll() {
       });
     }
     summary.tickets = createdTickets.length;
+    console.log(`✅ Service Tickets seeded (${summary.tickets} tickets with logs and images).`);
 
-    // 9. Maintenance Schedules
+    // 9. MAINTENANCE SCHEDULES
     for (let i = 0; i < deployedKits.length; i++) {
       const kit = deployedKits[i];
       await db.MaintenanceSchedule.findOrCreate({
@@ -476,22 +739,22 @@ async function seedAll() {
           maintenance_interval_days: 30,
           last_maintenance_date: '2026-02-15',
           next_maintenance_due_date: '2026-03-15',
-          schedule_status: i === 6 ? 'paused' : 'active'
+          schedule_status: i === 7 ? 'paused' : 'active'
         }
       });
     }
 
-    // 10. Device Health Logs
-    const healthStatuses = ['online', 'online', 'online', 'online', 'sensor_fault', 'online', 'online', 'online'];
+    // 10. DEVICE HEALTH LOGS
+    const healthStatuses = ['online', 'online', 'online', 'online', 'sensor_fault', 'online', 'online', 'online', 'online', 'power_issue'];
     for (let i = 0; i < deployedKits.length; i++) {
       await db.DeviceHealthLog.create({
         kit_id: deployedKits[i].id,
-        health_status: healthStatuses[i],
+        health_status: healthStatuses[i % healthStatuses.length],
         recorded_at: new Date()
       });
     }
 
-    // 11. Alerts (10 diverse alerts)
+    // 11. ALERTS
     const alertConfigs = [
       { kitIdx: 3, cat: 'sensor_issue', desc: 'PM2.5 optic chamber high dust warning on BKC Kit', status: 'open' },
       { kitIdx: 6, cat: 'maintenance', desc: 'Scheduled calibration due for Anand Vihar ISBT Kit', status: 'open' },
@@ -499,7 +762,7 @@ async function seedAll() {
       { kitIdx: 1, cat: 'order', desc: 'Order ORD-2026-002 dispatched to Pune Municipal Corp', status: 'resolved' },
       { kitIdx: 2, cat: 'repair', desc: 'Vibration dampener replaced on transit bus roof unit', status: 'resolved' },
       { kitIdx: 4, cat: 'ticket', desc: 'Maintenance ticket created for BEST Andheri depot inspection', status: 'open' },
-      { kitIdx: 5, cat: 'inventory', desc: 'Sensor batch SBATCH-2026-001 allocated 40 units', status: 'resolved' },
+      { kitIdx: 5, cat: 'inventory', desc: 'Sensor batch SBATCH-2026-001 allocated 60 units to assembly', status: 'resolved' },
       { kitIdx: 7, cat: 'maintenance', desc: 'Routine preventative check completed for Whitefield ITPL', status: 'resolved' }
     ];
 
@@ -517,7 +780,7 @@ async function seedAll() {
     }
     summary.alerts = alertConfigs.length;
 
-    // 12. AQI Readings (Hourly history for all deployed kits)
+    // 12. AQI READINGS
     let readingCount = 0;
     const now = Date.now();
     for (const kit of deployedKits) {
@@ -548,22 +811,25 @@ async function seedAll() {
     }
     summary.readings = readingCount;
 
-    // 13. SLA Tracking & Performance
+    // 13. SLA TRACKING & PERFORMANCE
     const slaConfigs = [
       { ticket: createdTickets[0], tech: 'John Doe', status: 'Completed', type: 'Installation' },
       { ticket: createdTickets[1], tech: 'John Doe', status: 'Completed', type: 'Installation' },
       { ticket: createdTickets[2], tech: 'Robert Brown', status: 'Completed', type: 'Installation' },
-      { ticket: createdTickets[3], tech: 'Robert Brown', status: 'On Track', type: 'Maintenance' },
-      { ticket: createdTickets[4], tech: 'Robert Brown', status: 'On Track', type: 'Maintenance' },
-      { ticket: createdTickets[5], tech: 'Vikram Singh', status: 'Completed', type: 'Installation' },
-      { ticket: createdTickets[6], tech: 'Vikram Singh', status: 'Breach', type: 'Maintenance' }
+      { ticket: createdTickets[3], tech: 'Robert Brown', status: 'On Track', type: 'Installation' },
+      { ticket: createdTickets[4], tech: 'Robert Brown', status: 'On Track', type: 'Installation' },
+      { ticket: createdTickets[5], tech: 'Vikram Singh', status: 'On Track', type: 'Installation' },
+      { ticket: createdTickets[6], tech: 'John Doe', status: 'On Track', type: 'Maintenance' },
+      { ticket: createdTickets[7], tech: 'John Doe', status: 'On Track', type: 'Maintenance' },
+      { ticket: createdTickets[8], tech: 'Vikram Singh', status: 'Completed', type: 'Maintenance' },
+      { ticket: createdTickets[9], tech: 'John Doe', status: 'Completed', type: 'Maintenance' }
     ];
 
     for (const sc of slaConfigs) {
       await db.SlaTracking.findOrCreate({
-        where: { ticketId: String(sc.ticket.id) },
+        where: { ticketId: `TKT-${sc.ticket.id}` },
         defaults: {
-          ticketId: String(sc.ticket.id),
+          ticketId: `TKT-${sc.ticket.id}`,
           assigned: 'Admin Operations',
           assignedTo: sc.tech,
           assignedDate: '2026-02-15',
@@ -574,11 +840,10 @@ async function seedAll() {
       });
     }
 
-    // SLA Performance
     const techScores = [
-      { name: 'John Doe', comp: 18, pend: 2, install: 12, maint: 8, score: 95 },
-      { name: 'Robert Brown', comp: 14, pend: 3, install: 9, maint: 8, score: 88 },
-      { name: 'Vikram Singh', comp: 16, pend: 1, install: 10, maint: 7, score: 92 }
+      { name: 'John Doe', comp: 22, pend: 2, install: 14, maint: 10, score: 96 },
+      { name: 'Robert Brown', comp: 16, pend: 3, install: 10, maint: 9, score: 89 },
+      { name: 'Vikram Singh', comp: 18, pend: 1, install: 11, maint: 8, score: 93 }
     ];
 
     for (const ts of techScores) {
@@ -595,7 +860,7 @@ async function seedAll() {
       });
     }
 
-    // 14. Reports
+    // 14. REPORTS
     const reportConfigs = [
       { user: clientUser1, type: 'aqi_summary', url: '/reports/monthly-aqi-summary-feb2026.pdf' },
       { user: clientUser1, type: 'compliance', url: '/reports/cpcb-compliance-q1-2026.pdf' },
@@ -616,7 +881,7 @@ async function seedAll() {
     }
     summary.reports = reportConfigs.length;
 
-    console.log('✨ Comprehensive dummy data for all modules seeded successfully!');
+    console.log('✨ All dummy data for Order Management, Inventory Management, Maintenance Support, and more seeded successfully!');
     return { success: true, summary };
   } catch (err) {
     console.error('❌ Error during database seeding:', err);

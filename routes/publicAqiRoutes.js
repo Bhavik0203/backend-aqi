@@ -1,7 +1,15 @@
 const express = require('express');
 const router = express.Router();
+const path = require('path');
 
-// Mock Transit / Sensor points for AQIMap and Hero components
+let thirtyDaysData = [];
+try {
+  thirtyDaysData = require('../data/30daysdummydata.json');
+} catch (e) {
+  console.warn('30-day data load notice:', e.message);
+}
+
+// Fallback points
 const mockBusData = [
   { key: 'KIT-PUN-01', data: { latitude: 18.52043, longitude: 73.85674, aqi: 82, pm25: 28, pm10: 52 }, timestamp: Date.now() },
   { key: 'KIT-PUN-02', data: { latitude: 18.55965, longitude: 73.77978, aqi: 115, pm25: 42, pm10: 78 }, timestamp: Date.now() },
@@ -16,14 +24,40 @@ const mockBusData = [
 
 // /api/aqi_values/bus-data/all
 router.get('/aqi_values/bus-data/all', (req, res) => {
-  res.json({
-    status: 'success',
-    data: mockBusData
-  });
+  if (thirtyDaysData && thirtyDaysData.length > 0) {
+    const busPoints = thirtyDaysData.slice(-30).map((item, idx) => ({
+      key: `BUS-${101 + idx}`,
+      data: {
+        latitude: parseFloat(item.lat),
+        longitude: parseFloat(item.lon),
+        aqi: item.aqi,
+        pm25: item.pm25,
+        pm10: item.pm10
+      },
+      timestamp: new Date(item.timestamp_utc).getTime()
+    }));
+    return res.json({ status: 'success', data: busPoints });
+  }
+  res.json({ status: 'success', data: mockBusData });
 });
 
 // /api/hourly
 router.get('/hourly', (req, res) => {
+  if (thirtyDaysData && thirtyDaysData.length >= 24) {
+    const last24 = thirtyDaysData.slice(-24).map((item, idx) => ({
+      date: item.timestamp_utc.slice(0, 10),
+      hour: idx,
+      aqi: item.aqi,
+      pm25: item.pm25,
+      pm10: item.pm10,
+      co: item.co,
+      no2: item.no2,
+      so2: parseFloat((item.no2 * 0.4).toFixed(1)),
+      o3: item.o3
+    }));
+    return res.json({ status: 'success', data: last24 });
+  }
+
   const today = new Date().toISOString().slice(0, 10);
   const data = [];
   for (let hour = 0; hour < 24; hour++) {

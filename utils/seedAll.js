@@ -780,34 +780,49 @@ async function seedAll() {
     }
     summary.alerts = alertConfigs.length;
 
-    // 12. AQI READINGS
+    // 12. AQI READINGS (From 30-day dummy data)
     let readingCount = 0;
-    const now = Date.now();
-    for (const kit of deployedKits) {
-      const readings = [];
-      const isDelhi = kit.current_location.includes('Delhi');
-      const isMumbai = kit.current_location.includes('Mumbai');
-      const basePM25 = isDelhi ? 130 : (isMumbai ? 85 : 55);
+    let thirtyDaysData = [];
+    try {
+      thirtyDaysData = require('../data/30daysdummydata.json');
+    } catch (e) {
+      console.warn('Notice: loading 30-day data failed:', e.message);
+    }
 
-      for (let h = 0; h < 16; h++) {
-        const time = new Date(now - h * 3600 * 1000);
-        const pm25 = Math.max(15, Math.round(basePM25 + Math.sin(h / 2) * 25 + (Math.random() * 15 - 7)));
-        const pm10 = Math.round(pm25 * 1.6);
-        const aqi = Math.round(pm25 * 1.25);
-
-        readings.push({
+    if (thirtyDaysData && thirtyDaysData.length > 0) {
+      for (const kit of deployedKits) {
+        const readings = thirtyDaysData.map(item => ({
           kit_id: kit.id,
-          pm25: pm25,
-          pm10: pm10,
-          co: parseFloat((0.5 + Math.random() * 0.5).toFixed(2)),
-          no2: parseFloat((20 + Math.random() * 20).toFixed(1)),
-          o3: parseFloat((10 + Math.random() * 15).toFixed(1)),
-          calculated_aqi: aqi,
-          recorded_at: time
-        });
+          pm25: item.pm25,
+          pm10: item.pm10,
+          co: item.co,
+          no2: item.no2,
+          o3: item.o3,
+          calculated_aqi: item.aqi,
+          recorded_at: new Date(item.timestamp_utc)
+        }));
+        await db.AQIReading.bulkCreate(readings);
+        readingCount += readings.length;
       }
-      await db.AQIReading.bulkCreate(readings);
-      readingCount += readings.length;
+    } else {
+      const now = Date.now();
+      for (const kit of deployedKits) {
+        const readings = [];
+        for (let h = 0; h < 24; h++) {
+          readings.push({
+            kit_id: kit.id,
+            pm25: 45,
+            pm10: 75,
+            co: 0.5,
+            no2: 25,
+            o3: 15,
+            calculated_aqi: 95,
+            recorded_at: new Date(now - h * 3600 * 1000)
+          });
+        }
+        await db.AQIReading.bulkCreate(readings);
+        readingCount += readings.length;
+      }
     }
     summary.readings = readingCount;
 

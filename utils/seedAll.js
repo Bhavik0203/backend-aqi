@@ -8,8 +8,12 @@ async function seedAll() {
     console.log('🌱 Starting comprehensive database seeding...');
 
     // 0. Ensure schema is synchronized
-    await db.sequelize.sync({ alter: true });
-    console.log('✅ Database schema synchronized.');
+    try {
+      await db.sequelize.sync();
+      console.log('✅ Database schema verified.');
+    } catch (syncErr) {
+      console.warn('⚠️ Table sync notice (continuing):', syncErr.message);
+    }
 
     // 1. Roles & Permissions
     const roleDefinitions = [

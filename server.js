@@ -84,14 +84,16 @@ const startServer = async () => {
       console.log('✅ Database synchronized.');
     }
 
-    // Auto-seed initial dummy data if users table is empty
+    // Auto-seed initial dummy data if admin does not exist or database is empty
     try {
-      const userCount = await db.UserProfile.count();
-      if (userCount === 0 || process.env.AUTO_SEED === 'true' || process.env.SEED_DB === 'true') {
-        console.log('🌱 Database is empty or AUTO_SEED enabled. Seeding initial dummy data...');
+      const adminExists = await db.UserProfile.findOne({ where: { email: 'admin@pritomatic.com' } });
+      if (!adminExists || process.env.AUTO_SEED === 'true' || process.env.SEED_DB === 'true') {
+        console.log('🌱 Admin user not found in DB. Seeding initial dummy data...');
         const { seedAll } = require('./utils/seedAll');
         await seedAll();
         console.log('✅ Initial dummy data seeded successfully.');
+      } else {
+        console.log('✅ Admin user verified in DB.');
       }
     } catch (seedErr) {
       console.warn('⚠️ Auto-seed check notice:', seedErr.message);

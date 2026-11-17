@@ -8,7 +8,7 @@
     "dev": "nodemon server.js",
     "db:migrate": "sequelize-cli db:migrate",
     "db:sync": "node sync-db.js",
-    "db:seed": "sequelize-cli db:seed:all"
+    "db:seed": "node seed-all.js"
   },
   "keywords": [
     "aqi",

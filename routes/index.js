@@ -36,6 +36,7 @@ router.use('/rbac', rbacRoutes);
 router.use('/transactions', transactionRoutes);
 router.use('/upload', require('./uploadRoutes'));
 router.use('/auth', require('./authRoutes'));
+router.use('/seed', require('./seedRoutes'));
 
 
 router.get('/health', (req, res) => {

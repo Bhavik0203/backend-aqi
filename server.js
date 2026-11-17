@@ -58,7 +58,8 @@ app.get('/', (req, res) => {
       technicians: '/api/technicians',
       reports: '/api/reports',
       slaTracking: '/api/sla/tracking',
-      slaPerformance: '/api/sla/performance'
+      slaPerformance: '/api/sla/performance',
+      seed: '/api/seed'
     }
   });
 });
@@ -81,6 +82,19 @@ const startServer = async () => {
     if (process.env.SYNC_DB === 'true') {
       await db.sequelize.sync({ alter: true });
       console.log('✅ Database synchronized.');
+    }
+
+    // Auto-seed initial dummy data if users table is empty
+    try {
+      const userCount = await db.UserProfile.count();
+      if (userCount === 0 || process.env.AUTO_SEED === 'true' || process.env.SEED_DB === 'true') {
+        console.log('🌱 Database is empty or AUTO_SEED enabled. Seeding initial dummy data...');
+        const { seedAll } = require('./utils/seedAll');
+        await seedAll();
+        console.log('✅ Initial dummy data seeded successfully.');
+      }
+    } catch (seedErr) {
+      console.warn('⚠️ Auto-seed check notice:', seedErr.message);
     }
 
     const server = app.listen(PORT, '0.0.0.0', () => {

@@ -1,8 +1,10 @@
 const axios = require('axios');
 
+const API_URL = process.env.API_URL || 'https://backend-aqi.onrender.com/api';
+
 async function checkApi() {
     try {
-        const res = await axios.get('http://localhost:5000/api/kits');
+        const res = await axios.get(`${API_URL}/kits`);
         console.log('Status:', res.status);
         console.log('Success:', res.data.success);
         console.log('Data Length:', res.data.data ? res.data.data.length : 'N/A');

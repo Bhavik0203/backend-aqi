@@ -1,7 +1,9 @@
+const API_URL = process.env.API_URL || 'https://backend-aqi.onrender.com/api';
+
 async function checkDeployments() {
     try {
         console.log("Checking /api/deployments...");
-        const res = await fetch('http://localhost:5000/api/deployments');
+        const res = await fetch(`${API_URL}/deployments`);
 
         console.log('Status:', res.status);
         if (!res.ok) {
